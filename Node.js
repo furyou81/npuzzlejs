@@ -6,7 +6,7 @@ const Direction = {
 }
 
 class Node {
-    constructor(state, parent = null) {
+    constructor(state, parent = null, nilPosition) {
         this.parent = parent;
         this.scoreG = parent != null ? parent.scoreG + 1 : 0;
         this.state = state;
@@ -23,6 +23,7 @@ class Node {
                 this.flatState.push(column);
             })
         })
+        this.nilPosition = nilPosition;
     }
 
     scoreF() {
@@ -31,27 +32,26 @@ class Node {
 
     findPossibleState() {
         var possibleStates = [];
-        var nilPosition = this.findNilPosition();
-        var directions = this.findDirections(nilPosition);
+        // var nilPosition = this.findNilPosition();
+        var directions = this.findDirections(this.nilPosition);
         
         directions.forEach(direction => {
-            var newState = this.swapState(nilPosition, direction);
+            var newState = this.swapState(this.nilPosition, direction);
             possibleStates.push(newState);
         })
         return possibleStates;
     }
 
     swapState(position, direction) {
-        var newState = JSON.parse(JSON.stringify(this.state));
-        // console.log("ICI", position, direction, newState)
+        var newState = this.state.map(function(arr) {
+            return arr.slice();
+        });
         switch (direction) {
         case Direction.DOWN:
-        // console.log("ICICICI")
             newState[position.y][position.x] = newState[position.y + 1][position.x]
             newState[position.y + 1][position.x] = 0
             break;
         case Direction.LEFT:
-        // console.log("ISDSDSDDSDS")
             newState[position.y][position.x] = newState[position.y][position.x - 1]
             newState[position.y][position.x - 1] = 0
             break;
@@ -60,7 +60,6 @@ class Node {
             newState[position.y][position.x + 1] = 0
             break;
         case Direction.UP:
-            // console.log("IPPP????", position, direction, Direction.UP)
             newState[position.y][position.x] = newState[position.y - 1][position.x]
             newState[position.y - 1][position.x] = 0
             break;
@@ -68,10 +67,10 @@ class Node {
         return newState;
     }
 
-    findNilPosition() {
-        for(let y = 0; y < this.state.length; y++) {
-            for (let x = 0; x < this.state[0].length; x++) {
-                if (this.state[y][x] === 0) {
+    static findNilPosition(state) {
+        for(let y = 0; y < state.length; y++) {
+            for (let x = 0; x < state[0].length; x++) {
+                if (state[y][x] === 0) {
                     return {x: x, y: y};
                 }
             }

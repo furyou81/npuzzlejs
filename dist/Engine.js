@@ -42,7 +42,9 @@ var Engine = function () {
     _createClass(Engine, [{
         key: "findGoal",
         value: function findGoal() {
-            var goal = JSON.parse(JSON.stringify(this.rootNode.state));
+            var goal = this.rootNode.state.map(function (arr) {
+                return arr.slice();
+            });
             var numbers = [];
             for (var j = 0; j < goal.length; j++) {
                 for (var i = 0; i < goal[0].length; i++) {
@@ -80,8 +82,6 @@ var Engine = function () {
                 x = x + 1;
             }
             this.goalState = new _Node2.default(goal);
-            console.log("GOAL");
-            this.goalState.draw();
         }
     }, {
         key: "applyHeuristic",
@@ -103,11 +103,10 @@ var Engine = function () {
             for (var y = 0; y <= node.state.length - 1; y++) {
                 for (var x = 0; x <= node.state[0].length - 1; x++) {
                     if (node.state[y][x] !== 0 && node.state[y][x] !== this.goalState.state[y][x]) {
-
                         var currentIndex = node.flatState.indexOf(node.state[y][x]);
                         var goalIndex = this.goalState.flatState.indexOf(node.state[y][x]);
-                        var h = Math.floor(Math.abs(Math.floor(currentIndex / this.puzzleSize) - Math.floor(goalIndex / this.puzzleSize)));
-                        var w = Math.floor(Math.abs(Math.floor(currentIndex % this.puzzleSize) - Math.floor(goalIndex % this.puzzleSize)));
+                        var h = Math.abs(Math.floor(currentIndex / this.puzzleSize) - Math.floor(goalIndex / this.puzzleSize));
+                        var w = Math.abs(Math.floor(currentIndex % this.puzzleSize) - Math.floor(goalIndex % this.puzzleSize));
                         manhattanDistances = manhattanDistances + h + w;
                     }
                 }
@@ -121,6 +120,7 @@ var Engine = function () {
 
             this.openList = new TinyQueue([this.rootNode], sortNode);
             this.closedList = {};
+            this.closedList[this.rootNode.hash] = this.rootNode;
 
             while (this.openList.length > 0 && !this.isFound) {
                 // if (Object.keys(this.closedList).length % 1000 === 0) {
@@ -130,11 +130,10 @@ var Engine = function () {
 
                 var children = this.getChildren(current);
                 children.forEach(function (child) {
-                    // if successor is the goal, stop search
-                    // console.log(child.hash, this.goalState.hash)
                     if (child.hash === _this.goalState.hash) {
-                        console.log("END");
-
+                        console.log("END", _this.closedList);
+                        _this.closedList[current.hash] = current;
+                        _this.closedList[child.hash] = child;
                         var n = child;
                         var nb = 0;
                         while (n.parent != null) {
@@ -143,6 +142,7 @@ var Engine = function () {
                             nb = nb + 1;
                         }
                         console.log("nb: ", nb, "open: ", _this.openList.length, "closed: ", Object.keys(_this.closedList).length);
+                        n.draw();
                         _this.isFound = true;
                         return;
                     }
@@ -151,23 +151,15 @@ var Engine = function () {
                         return;
                     } else {
                         var c = _this.applyHeuristic(child, _this.heuristic);
-                        c.scoreG = current.scoreG + 1;
-
-                        // if (openList.queue.contains(where: { $0 == c && $0.scoreF < c.scoreF })) {
-                        //     continue ;
-                        // }
-
+                        // child.scoreG = current.scoreG + 1;
+                        // child.scoreH = current.scoreH + heuri()
                         if (_this.closedList[c.hash] != null) {
                             if (c.scoreF() > _this.closedList[c.hash].scoreF()) {
-                                ;
-                            } else {
                                 _this.openList.push(c);
                             }
                         } else {
                             _this.openList.push(c);
                         }
-
-                        // openList.push(c);
                     }
                 });
 
@@ -185,6 +177,23 @@ var Engine = function () {
                 children.push(newNode);
             });
             return children;
+        }
+    }, {
+        key: "heuri",
+        value: function heuri(direction, parrentNilPosition, childNilPosition, nb) {
+            var old = manone(currentIndex, nb);
+            var ne = manone(currentIndex, nb);
+            return ne - old;
+        }
+    }, {
+        key: "manone",
+        value: function manone(currentIndex, nb) {
+            var index = currentIndex.y * this.puzzleSize + currentIndex.x;
+            var goalIndex = this.goalState.flatState.indexOf(nb);
+            var h = abs(Math.abs(index / this.puzzleSize) - Math.abs(goalIndex / this.puzzleSize));
+            var w = abs(Math.abs(index % this.puzzleSize) - Math.abs(goalIndex % this.puzzleSize));
+            //        print("H", h, "W", w, "INDEX", index)
+            return h + w;
         }
     }]);
 

@@ -10,12 +10,20 @@ var mock84 = [
 ]
 
 var mockInitialState = [
-    [0, 2, 3],
-    [1, 4, 5],
+    [1, 2, 3],
+    [0, 4, 5],
     [8, 7, 6]
 ]
 
-var rootNode = new Node(mock84);
+let medium = [
+    [15, 13, 5, 3],
+    [14, 8, 1, 10],
+    [2, 7, 0, 4],
+    [6, 9, 12, 11]
+]
+
+var nilPos = Node.findNilPosition(mockInitialState)
+var rootNode = new Node(mockInitialState, null, nilPos);
 var engine = new Engine(rootNode, Heuristic.MANHATTAN);
 console.log("ROOT NODE")
 rootNode.draw();

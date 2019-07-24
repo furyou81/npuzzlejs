@@ -21,7 +21,9 @@ class Engine {
     }
 
     findGoal() {
-        var goal= JSON.parse(JSON.stringify(this.rootNode.state));
+        var goal= this.rootNode.state.map(function(arr) {
+            return arr.slice();
+        });
         var numbers = [];
         for(let j = 0; j < goal.length; j++) {
             for (let i = 0; i < goal[0].length; i++) {
@@ -59,8 +61,6 @@ class Engine {
                 x = x + 1
             }
         this.goalState = new Node(goal)
-        console.log("GOAL")
-        this.goalState.draw()
     }
 
     applyHeuristic(node, heuristic) {
@@ -80,11 +80,10 @@ class Engine {
         for (let y = 0; y <= node.state.length - 1; y++) {
             for (let x = 0; x <= node.state[0].length - 1; x++) {
                 if (node.state[y][x] !== 0 && node.state[y][x] !== this.goalState.state[y][x]) {
-                    
                     var currentIndex = node.flatState.indexOf(node.state[y][x]);
                     var goalIndex = this.goalState.flatState.indexOf(node.state[y][x]);
-                    let h = Math.floor(Math.abs(Math.floor(currentIndex / this.puzzleSize) - Math.floor(goalIndex / this.puzzleSize)))
-                    let w = Math.floor(Math.abs(Math.floor(currentIndex % this.puzzleSize) - Math.floor(goalIndex % this.puzzleSize)))
+                    let h = Math.abs(Math.floor(currentIndex / this.puzzleSize) - Math.floor(goalIndex / this.puzzleSize))
+                    let w = Math.abs(Math.floor(currentIndex % this.puzzleSize) - Math.floor(goalIndex % this.puzzleSize))
                     manhattanDistances = manhattanDistances + h + w
                 }
             }
@@ -95,6 +94,7 @@ class Engine {
     execute() {
         this.openList = new TinyQueue([this.rootNode], sortNode);
         this.closedList = {};
+        this.closedList[this.rootNode.hash] = this.rootNode;
         
         while (this.openList.length > 0 && !this.isFound) {
             // if (Object.keys(this.closedList).length % 1000 === 0) {
@@ -104,11 +104,10 @@ class Engine {
             
             var children = this.getChildren(current);
             children.forEach(child => {
-                // if successor is the goal, stop search
-                // console.log(child.hash, this.goalState.hash)
                 if (child.hash === this.goalState.hash) {
-                    console.log("END")
-                    
+                    console.log("END", this.closedList)
+                    this.closedList[current.hash] = current;
+                    this.closedList[child.hash] = child;
                     let n = child;
                     let nb = 0;
                     while (n.parent != null) {
@@ -117,6 +116,7 @@ class Engine {
                         nb = nb + 1
                     }
                     console.log("nb: ", nb, "open: ", this.openList.length, "closed: ", Object.keys(this.closedList).length)
+                    n.draw();
                     this.isFound = true;
                     return
                 }
@@ -125,23 +125,15 @@ class Engine {
                     return
                 } else {
                 var c = this.applyHeuristic(child, this.heuristic);
-                c.scoreG = current.scoreG + 1;
-                
-                // if (openList.queue.contains(where: { $0 == c && $0.scoreF < c.scoreF })) {
-                //     continue ;
-                // }
-                
+                // child.scoreG = current.scoreG + 1;
+                // child.scoreH = current.scoreH + heuri()
                 if (this.closedList[c.hash] != null) {
                     if (c.scoreF() > this.closedList[c.hash].scoreF()) {
-                        ;
-                    } else {
                         this.openList.push(c);
                     }
                 } else {
                     this.openList.push(c);
                 }
-                
-                // openList.push(c);
             }})
 
             this.closedList[current.hash] = current;
@@ -157,6 +149,21 @@ class Engine {
             children.push(newNode);
         })
         return children
+    }
+
+    heuri(parrentNilPosition, childNilPosition, nb) {
+        var old = manone(childNilPosition, nb)
+        var ne = manone(parrentNilPosition, nb)
+        return ne - old
+    }
+
+    manone(currentIndex, nb) {
+        var index = (currentIndex.y * this.puzzleSize + currentIndex.x)
+        var goalIndex = this.goalState.flatState.indexOf(nb);
+        var h = abs(Math.abs(index / this.puzzleSize) - Math.abs(goalIndex / this.puzzleSize))
+        var w = abs(Math.abs(index % this.puzzleSize) - Math.abs(goalIndex % this.puzzleSize))
+//        print("H", h, "W", w, "INDEX", index)
+        return h + w
     }
     
 }

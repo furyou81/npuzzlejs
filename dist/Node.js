@@ -64,16 +64,15 @@ var Node = function () {
     }, {
         key: 'swapState',
         value: function swapState(position, direction) {
-            var newState = JSON.parse(JSON.stringify(this.state));
-            // console.log("ICI", position, direction, newState)
+            var newState = this.state.map(function (arr) {
+                return arr.slice();
+            });
             switch (direction) {
                 case Direction.DOWN:
-                    // console.log("ICICICI")
                     newState[position.y][position.x] = newState[position.y + 1][position.x];
                     newState[position.y + 1][position.x] = 0;
                     break;
                 case Direction.LEFT:
-                    // console.log("ISDSDSDDSDS")
                     newState[position.y][position.x] = newState[position.y][position.x - 1];
                     newState[position.y][position.x - 1] = 0;
                     break;
@@ -82,7 +81,6 @@ var Node = function () {
                     newState[position.y][position.x + 1] = 0;
                     break;
                 case Direction.UP:
-                    // console.log("IPPP????", position, direction, Direction.UP)
                     newState[position.y][position.x] = newState[position.y - 1][position.x];
                     newState[position.y - 1][position.x] = 0;
                     break;
